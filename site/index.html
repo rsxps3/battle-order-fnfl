@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Battle order – éditeur</title>
+  <link rel="stylesheet" href="/fonts.css">
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/theme-fnfl.css">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="fn-head top">
+    <a class="brand" href="https://fnfl.app/" target="_blank" rel="noopener noreferrer"><img data-logo src="/fnfl_flag_logo_roundel.png" width="44" height="44" alt="Logo Forces Navales Françaises Libres"><span>3e RFM · FNFL</span></a>
+    <h1>Battle order <span>éditeur</span></h1>
+    <p class="hint">Les pages publiées sont supprimées automatiquement après 30 jours.</p>
+    <div class="actions">
+      <button id="btn-new" type="button">Nouveau</button>
+      <button id="btn-import" type="button">Importer</button>
+      <button id="btn-export" type="button">Exporter</button>
+      <button id="btn-publish" type="button" class="primary">Générer le lien</button>
+      <input id="file" type="file" accept="application/json,.json" hidden>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="editor" aria-label="Édition">
+      <div class="card">
+        <h2>Général</h2>
+        <label>Titre<input id="f-title" maxlength="80" autocomplete="off"></label>
+        <label>Sous-titre (opération, carte…)<input id="f-subtitle" maxlength="80" autocomplete="off"></label>
+        <label class="check"><input type="checkbox" id="f-secondary"> Afficher les armes secondaires</label>
+      </div>
+      <div class="card">
+        <h2>Commandement</h2>
+        <div id="command"></div>
+        <button type="button" id="btn-add-cmd" class="ghost">+ Ajouter une ligne</button>
+      </div>
+      <div id="sections"></div>
+      <button type="button" id="btn-add-section" class="primary big">+ Ajouter une section</button>
+    </section>
+
+    <aside class="preview" aria-label="Aperçu">
+      <h2>Aperçu</h2>
+      <iframe id="preview" title="Aperçu du battle order" sandbox="allow-same-origin"></iframe>
+    </aside>
+  </main>
+
+  <footer class="fn-foot">3ème Régiment de Fusiliers Marins · Forces Navales Françaises Libres · « Vaincre ou sombrer » · © Copyright · Made by Remzer · <a href="/confidentialite.html">Confidentialité</a></footer>
+
+  <div id="modal" class="modal" hidden>
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h2 id="modal-title"></h2>
+      <div id="modal-body"></div>
+      <div id="modal-actions" class="actions"></div>
+    </div>
+  </div>
+  <div id="toast" class="toast" hidden></div>
+  <datalist id="teams"></datalist>
+
+  <script src="/ui.js"></script>
+  <script src="/bo-render.js"></script>
+  <script src="/editor.js"></script>
+</body>
+</html>

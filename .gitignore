@@ -1,0 +1,15 @@
+# Fichiers générés ou propres au serveur : jamais dans le dépôt
+__pycache__/
+*.pyc
+*.bak
+*.bak-*
+.env
+*.env
+*.log
+node_modules/
+.DS_Store
+# si le dépôt est un jour placé directement dans /var/www/battle-order
+/o/
+/assets/
+/fonts/
+/fnfl_flag_logo_roundel.png

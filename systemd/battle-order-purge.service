@@ -1,0 +1,14 @@
+[Unit]
+Description=Battle Order - suppression des pages de plus de 30 jours
+
+[Service]
+Type=oneshot
+User=@WWW_USER@
+Group=@WWW_USER@
+Environment=BO_ROOT=@WEBROOT@
+ExecStart=/usr/bin/env node @APPDIR@/purge.js
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=@WEBROOT@/o

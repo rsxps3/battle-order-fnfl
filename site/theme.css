@@ -1,0 +1,38 @@
+/* Battle Order : charte graphique alignée sur fnfl.app.
+   Polices : Anton (titres) et IBM Plex Mono (texte), servies par ce site (voir fonts.css) ; repli sur des polices système.
+   Arrière-plan : valeurs par défaut ci-dessous ; theme-fnfl.css (généré à partir de fnfl.app par tools/extract-theme.py) les remplace. */
+:root{
+  --bo-fg:#f2efe6;
+  --bo-muted:#aab4c3;
+  --bo-bg:#0a1424;
+  --bo-head-font:"Anton","Impact","Haettenschweiler","Arial Narrow Bold",sans-serif;
+  --bo-body-font:"IBM Plex Mono",ui-monospace,Menlo,Consolas,"Courier New",monospace;
+}
+html{background:var(--bo-bg)}
+body{
+  margin:0;min-height:100vh;color:var(--bo-fg);font-family:var(--bo-body-font);
+  background:
+    radial-gradient(1100px 700px at 15% -10%,#1d3b69 0%,transparent 60%),
+    radial-gradient(900px 600px at 105% 5%,#4a1a26 0%,transparent 55%),
+    var(--bo-bg);
+  background-attachment:fixed;
+}
+/* en-tête et pied de page communs (mêmes textes que fnfl.app) */
+.fn-head{display:flex;align-items:center;gap:14px;padding:12px 18px;font-family:var(--bo-head-font);letter-spacing:.07em;text-transform:uppercase;color:var(--bo-fg)}
+.fn-head a{display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none;font-size:1.15rem}
+.fn-head img{width:44px;height:44px;object-fit:contain}
+.fn-head .fn-sep{margin-left:auto;font-size:1rem;opacity:.75}
+.fn-foot{padding:6px 14px 26px;text-align:center;font-size:.72rem;opacity:.8;color:var(--bo-fg)}
+.fn-foot a{color:inherit}
+/* pages de texte (confidentialité) */
+.legal{max-width:880px;margin:18px auto 24px;padding:22px 26px;background:rgba(10,20,36,.82);color:#f2efe6;border:1px solid rgba(255,255,255,.14);border-radius:10px;line-height:1.6;font-size:.92rem}
+.legal h1{font-family:var(--bo-head-font);font-weight:400;text-transform:uppercase;letter-spacing:.06em;font-size:2.1rem;margin:0 0 4px}
+.legal h2{font-family:var(--bo-head-font);font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:1.3rem;margin:28px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,.2)}
+.legal h3{font-size:1rem;margin:16px 0 4px}
+.legal .devise{margin:0 0 14px;opacity:.85;font-style:italic}
+.legal a{color:#9ccbff}
+.legal table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.85rem}
+.legal th,.legal td{border:1px solid rgba(255,255,255,.2);padding:7px 9px;text-align:left;vertical-align:top}
+.legal th{background:rgba(255,255,255,.08)}
+.legal code{background:rgba(255,255,255,.1);padding:1px 5px;border-radius:4px}
+@media (max-width:640px){.legal{margin:10px;padding:16px}.legal table{font-size:.78rem}}

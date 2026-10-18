@@ -1,0 +1,27 @@
+[Unit]
+Description=Battle Order - publication de pages (@DOMAIN@)
+After=network.target
+
+[Service]
+Type=simple
+User=@WWW_USER@
+Group=@WWW_USER@
+Environment=NODE_ENV=production
+Environment=BO_ROOT=@WEBROOT@
+Environment=BO_PORT=@PORT@
+Environment=BO_BASE_URL=https://@DOMAIN@
+# Code de publication facultatif : BO_PUBLISH_CODE=... dans ce fichier
+EnvironmentFile=-/etc/battle-order.env
+ExecStart=/usr/bin/env node @APPDIR@/server.js
+Restart=on-failure
+RestartSec=3
+Umask=0022
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=@WEBROOT@/o
+MemoryMax=300M
+
+[Install]
+WantedBy=multi-user.target
