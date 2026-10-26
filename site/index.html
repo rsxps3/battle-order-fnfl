@@ -20,6 +20,7 @@
       <button id="btn-import" type="button">Importer</button>
       <button id="btn-export" type="button">Exporter</button>
       <button id="btn-publish" type="button" class="primary">Générer le lien</button>
+      <button id="btn-lang" type="button" class="ghost">EN</button>
       <input id="file" type="file" accept="application/json,.json" hidden>
     </div>
   </header>
@@ -28,9 +29,9 @@
     <section class="editor" aria-label="Édition">
       <div class="card">
         <h2>Général</h2>
-        <label>Titre<input id="f-title" maxlength="80" autocomplete="off"></label>
-        <label>Sous-titre (opération, carte…)<input id="f-subtitle" maxlength="80" autocomplete="off"></label>
-        <label class="check"><input type="checkbox" id="f-secondary"> Afficher les armes secondaires</label>
+        <label><span>Titre</span><input id="f-title" maxlength="80" autocomplete="off"></label>
+        <label><span>Sous-titre (opération, carte…)</span><input id="f-subtitle" maxlength="80" autocomplete="off"></label>
+        <label class="check"><input type="checkbox" id="f-secondary"> <span>Afficher les armes secondaires</span></label>
       </div>
       <div class="card">
         <h2>Commandement</h2>
@@ -59,6 +60,7 @@
   <div id="toast" class="toast" hidden></div>
   <datalist id="teams"></datalist>
 
+  <script src="/i18n.js"></script>
   <script src="/ui.js"></script>
   <script src="/bo-render.js"></script>
   <script src="/editor.js"></script>

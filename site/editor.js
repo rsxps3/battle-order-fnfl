@@ -3,6 +3,9 @@
   "use strict";
 
   var BO = window.BO;
+  var I18N = window.I18N;
+  var LANG = I18N.getLang();
+  var trn = I18N.t;      // (« tr » est déjà le nom d'une ligne de tableau dans playerRow)
   var LS_KEY = "bo-draft-v1";
   var COUNTS = []; for (var n = 1; n <= BO.LIMITS.maxPlayers; n++) COUNTS.push(n);
 
@@ -24,12 +27,13 @@
       var v = props[k];
       if (v === undefined || v === null || v === false) return;
       if (k === "class") e.className = v;
-      else if (k === "text") e.textContent = v;
+      else if (k === "text") e.textContent = trn(v);
+      else if (typeof v === "string" && (k === "title" || k === "aria-label" || k === "placeholder" || k === "alt" || k === "data-l")) e.setAttribute(k, trn(v));
       else if (k.slice(0, 2) === "on") e.addEventListener(k.slice(2), v);
       else if (v === true) e.setAttribute(k, "");
       else e.setAttribute(k, v);
     });
-    (kids || []).forEach(function (c) { if (c !== null && c !== undefined) e.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+    (kids || []).forEach(function (c) { if (c !== null && c !== undefined) e.appendChild(typeof c === "string" ? document.createTextNode(trn(c)) : c); });
     return e;
   }
 
@@ -60,7 +64,7 @@
   function playerHasData(p) { return p.kit !== null || p.primary !== null || p.alt !== null || p.secondary !== null || p.team !== ""; }
 
   function setState(raw) {
-    var r = BO.normalize(raw, lookup);
+    var r = BO.normalize(raw, lookup, LANG);
     if (!r.order.sections.length) r.order.sections.push(newSection());
     if (!r.order.command.length) r.order.command.push({ label: "CMD", name: "" });
     state = r.order;
@@ -75,12 +79,12 @@
   }
   // L'aperçu est la page publiée elle-même, affichée dans un cadre (même charte, même arrière-plan).
   function renderPreview() {
-    var r = BO.normalize(state, lookup), now = Date.now(), frame = $("#preview"), y = 0;
+    var r = BO.normalize(state, lookup, LANG), now = Date.now(), frame = $("#preview"), y = 0;
     try { y = frame.contentWindow.scrollY || 0; } catch (e) { y = 0; }
     frame.onload = function () { try { frame.contentWindow.scrollTo(0, y); } catch (e) { /* ignoré */ } };
     frame.srcdoc = BO.renderPage(r.order, lookup, {
-      logo: hasLogo, createdText: BO.dateFr(now), retentionDays: config.retentionDays,
-      expiresText: BO.dateFr(now + config.retentionDays * 86400000)
+      lang: LANG, logo: hasLogo, createdText: BO.dateText(now, LANG), retentionDays: config.retentionDays,
+      expiresText: BO.dateText(now + config.retentionDays * 86400000, LANG)
     });
   }
   function updateTitles() {
@@ -107,7 +111,7 @@
   function rebuild() { renderSections(); changed(); }
 
   function toast(msg) {
-    var t = $("#toast"); t.textContent = msg; t.hidden = false;
+    var t = $("#toast"); t.textContent = trn(msg); t.hidden = false;
     clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 3500);
   }
 
@@ -133,7 +137,7 @@
 
   // ---------- éléments de formulaire ----------
   function selectEl(options, value, onchange, label) {
-    var s = el("select", { "aria-label": label || null });
+    var s = el("select", { "aria-label": label || null });      // (el traduit le libellé)
     options.forEach(function (o) { s.appendChild(el("option", { value: o.value, text: o.label })); });
     s.value = value;
     if (s.value !== value) s.value = options[0].value;
@@ -149,7 +153,7 @@
 
   // liste déroulante + zone de texte libre qui n'apparaît que pour « Autre »
   function withOther(map, getId, setId, getText, setText, options, label) {
-    var input = el("input", { maxlength: BO.LIMITS.text, placeholder: "Préciser…", "aria-label": label + " (texte libre)" });
+    var input = el("input", { maxlength: BO.LIMITS.text, placeholder: "Préciser…", "aria-label": label + " (" + trn("texte libre") + ")" });
     input.value = getText();
     function show() { var id = getId(); input.hidden = !(id !== null && BO.isOther(map, id)); }
     var sel = selectEl(options, getId() === null ? "" : String(getId()), function (v) {
@@ -163,7 +167,7 @@
     return [sel, input];
   }
 
-  function field(label, control) { return el("label", {}, [label, control]); }
+  function field(label, control) { return el("label", {}, [label, control]); }      // (el traduit le texte du libellé)
   function textField(label, value, max, placeholder, onchange) {
     var inp = el("input", { maxlength: max, placeholder: placeholder || null, autocomplete: "off" });
     inp.value = value;
@@ -175,7 +179,7 @@
     var mode = key + ":" + s.id;
     if (otherMode[mode] === undefined) otherMode[mode] = s[key] !== "" && choices.indexOf(s[key]) < 0;
     var options = choices.map(function (c) { return { value: c, label: c }; }).concat([{ value: "__other", label: "Autre…" }]);
-    var input = el("input", { maxlength: BO.LIMITS[key], placeholder: "Texte au choix", "aria-label": label + " (texte libre)" });
+    var input = el("input", { maxlength: BO.LIMITS[key], placeholder: "Texte au choix", "aria-label": label + " (" + trn("texte libre") + ")" });
     input.value = otherMode[mode] ? s[key] : "";
     input.hidden = !otherMode[mode];
     var sel = selectEl(options, otherMode[mode] ? "__other" : (choices.indexOf(s[key]) >= 0 ? s[key] : "__other"), function (v) {
@@ -184,7 +188,7 @@
       changed();
     }, label);
     input.addEventListener("input", function () { s[key] = input.value; changed(); });
-    return el("label", {}, [label, el("div", { class: "pair" }, [sel, input])]);
+    return el("label", {}, [label, el("div", { class: "pair" }, [sel, input])]);      // (idem)
   }
 
   // ---------- sections ----------
@@ -208,7 +212,7 @@
     rebuild();
   }
   function remove(s, i) {
-    if (!confirm("Supprimer la section « " + BO.sectionTitle(s, i) + " » ?")) return;
+    if (!confirm(trn("Supprimer la section « {name} » ?", { name: BO.sectionTitle(s, i) }))) return;
     state.sections.forEach(function (x) { if (x.parent === s.id) x.parent = s.parent; }); // ses sections dépendantes remontent d'un niveau
     state.sections.splice(state.sections.indexOf(s), 1);
     if (!state.sections.length) state.sections.push(newSection());
@@ -217,7 +221,7 @@
   function setPlayerCount(s, n) {
     if (n < s.players.length) {
       var lost = s.players.slice(n).filter(playerHasData).length;
-      if (lost && !confirm(lost + " joueur(s) déjà renseigné(s) seront retirés de cette section. Continuer ?")) return false;
+      if (lost && !confirm(trn("{n} joueur(s) déjà renseigné(s) seront retirés de cette section. Continuer ?", { n: lost }))) return false;
       s.players.length = n;
     } else {
       while (s.players.length < n) s.players.push(newPlayer());
@@ -258,7 +262,7 @@
     var sw = el("div", { class: "swatches", role: "group", "aria-label": "Couleur" });
     BO.PALETTE.forEach(function (c) {
       sw.appendChild(el("button", {
-        type: "button", class: "sw", title: c.name, "aria-label": c.name, "aria-pressed": String(s.color === c.key), style: "background:" + c.header,
+        type: "button", class: "sw", title: BO.colorName(c, LANG), "aria-label": BO.colorName(c, LANG), "aria-pressed": String(s.color === c.key), style: "background:" + c.header,
         onclick: function () { s.color = c.key; rebuild(); }
       }));
     });
@@ -288,28 +292,28 @@
     tr.appendChild(el("td", { class: "n", text: String(i + 1) }));
 
     var kitOpts = listOptions(lists.kits, "—", [{ value: "-1", label: "Autre…" }]);
-    var kit = withOther(lookup.kits, function () { return p.kit; }, function (v) { p.kit = v; }, function () { return p.kitText; }, function (v) { p.kitText = v; }, kitOpts, "Kit du joueur " + (i + 1));
+    var kit = withOther(lookup.kits, function () { return p.kit; }, function (v) { p.kit = v; }, function () { return p.kitText; }, function (v) { p.kitText = v; }, kitOpts, trn("Kit du joueur {n}", { n: i + 1 }));
     tr.appendChild(el("td", { "data-l": "Kit" }, kit));
 
     var wOpts = listOptions(lists.weapons, "—");
-    var main = withOther(lookup.weapons, function () { return p.primary; }, function (v) { p.primary = v; }, function () { return p.primaryText; }, function (v) { p.primaryText = v; }, wOpts, "Arme principale du joueur " + (i + 1));
+    var main = withOther(lookup.weapons, function () { return p.primary; }, function (v) { p.primary = v; }, function () { return p.primaryText; }, function (v) { p.primaryText = v; }, wOpts, trn("Arme principale du joueur {n}", { n: i + 1 }));
     var cell = el("td", { "data-l": "Arme principale" }, main);
     if (p.alt === null && !altOpen.has(p)) {
       cell.appendChild(el("button", { type: "button", class: "small ghost", text: "+ arme alternative", onclick: function () { altOpen.add(p); renderSections(); } }));
     } else {
       var altOpts = listOptions(lists.weapons, "(aucune)");
-      var alt = withOther(lookup.weapons, function () { return p.alt; }, function (v) { p.alt = v; }, function () { return p.altText; }, function (v) { p.altText = v; }, altOpts, "Arme alternative du joueur " + (i + 1));
+      var alt = withOther(lookup.weapons, function () { return p.alt; }, function (v) { p.alt = v; }, function () { return p.altText; }, function (v) { p.altText = v; }, altOpts, trn("Arme alternative du joueur {n}", { n: i + 1 }));
       cell.appendChild(el("div", { class: "altrow" }, [alt[0], el("button", { type: "button", class: "small danger", "aria-label": "Retirer l'arme alternative", text: "✕", onclick: function () { p.alt = null; p.altText = ""; altOpen.delete(p); rebuild(); } })]));
       cell.appendChild(alt[1]);
     }
     tr.appendChild(cell);
 
     if (state.showSecondary) {
-      var sec = withOther(lookup.secondaries, function () { return p.secondary; }, function (v) { p.secondary = v; }, function () { return p.secondaryText; }, function (v) { p.secondaryText = v; }, listOptions(lists.secondaries, "—"), "Arme secondaire du joueur " + (i + 1));
+      var sec = withOther(lookup.secondaries, function () { return p.secondary; }, function (v) { p.secondary = v; }, function () { return p.secondaryText; }, function (v) { p.secondaryText = v; }, listOptions(lists.secondaries, "—"), trn("Arme secondaire du joueur {n}", { n: i + 1 }));
       tr.appendChild(el("td", { "data-l": "Arme secondaire" }, sec));
     }
 
-    var team = el("input", { maxlength: BO.LIMITS.team, list: "teams", placeholder: s.team || "équipe", autocomplete: "off", "aria-label": "Équipe du joueur " + (i + 1) });
+    var team = el("input", { maxlength: BO.LIMITS.team, list: "teams", placeholder: s.team || "équipe", autocomplete: "off", "aria-label": trn("Équipe du joueur {n}", { n: i + 1 }) });
     team.value = p.team;
     team.addEventListener("input", function () { p.team = team.value; changed(); });
     tr.appendChild(el("td", { "data-l": "Équipe" }, [team]));
@@ -318,7 +322,7 @@
 
   // ---------- fenêtre de dialogue ----------
   function showModal(title, bodyNodes, buttons) {
-    $("#modal-title").textContent = title;
+    $("#modal-title").textContent = trn(title);
     var body = $("#modal-body"); body.textContent = "";
     bodyNodes.forEach(function (n) { body.appendChild(n); });
     var acts = $("#modal-actions"); acts.textContent = "";
@@ -332,7 +336,7 @@
   function errorList(items) { return el("ul", {}, items.map(function (t) { return el("li", { text: t }); })); }
 
   function askPublish() {
-    var r = BO.normalize(state, lookup);
+    var r = BO.normalize(state, lookup, LANG);
     if (r.errors.length) {
       showModal("À corriger avant de générer le lien", [el("p", { text: "Le battle order contient des éléments à corriger :" }), errorList(r.errors)], [{ label: "Fermer", primary: true, onclick: closeModal }]);
       return;
@@ -341,7 +345,7 @@
     codeInput.value = publishCode;
     var body = [
       el("p", { text: "Une page en lecture seule va être créée, avec un lien à partager." }),
-      el("p", { class: "warn", text: "Cette page sera supprimée automatiquement " + config.retentionDays + " jours après sa création." })
+      el("p", { class: "warn", text: trn("Cette page sera supprimée automatiquement {n} jours après sa création.", { n: config.retentionDays }) })
     ];
     if (config.codeRequired) body.push(el("p", { class: "note", text: "Un code de publication est nécessaire :" }), codeInput);
     showModal("Générer le lien", body, [
@@ -352,11 +356,11 @@
 
   function doPublish(order) {
     showModal("Génération en cours…", [el("p", { class: "note", text: "Merci de patienter." })], []);
-    fetch("api/publish", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ order: order, code: publishCode }) })
+    fetch("api/publish", { method: "POST", headers: { "Content-Type": "application/json", "X-Lang": LANG }, body: JSON.stringify({ order: order, code: publishCode, lang: LANG }) })
       .then(function (res) { return res.json().catch(function () { return {}; }).then(function (j) { return { status: res.status, json: j }; }); })
       .then(function (r) {
         if (r.status === 200) return showResult(r.json);
-        var msg = r.json.message || ({ invalid: "Le serveur a refusé ce battle order.", rate: "Trop de publications récentes.", full: "Le serveur est plein.", code: "Code de publication incorrect." })[r.json.error] || ("Erreur " + r.status + ".");
+        var msg = r.json.message || ({ invalid: "Le serveur a refusé ce battle order.", rate: "Trop de publications récentes.", full: "Le serveur est plein.", code: "Code de publication incorrect." })[r.json.error] || trn("Erreur {n}.", { n: r.status });
         var nodes = [el("p", { class: "err", text: msg })];
         if (r.json.details && r.json.details.length) nodes.push(errorList(r.json.details));
         showModal("Impossible de générer le lien", nodes, [{ label: r.json.error === "code" ? "Saisir à nouveau le code" : "Fermer", primary: true, onclick: r.json.error === "code" ? askPublish : closeModal }]);
@@ -369,9 +373,12 @@
   function showResult(j) {
     var link = el("input", { type: "text", readonly: true, "aria-label": "Lien à partager" });
     link.value = j.url;
+    var other = el("input", { type: "text", readonly: true, "aria-label": LANG === "en" ? "Version française (lien direct) :" : "Version anglaise (lien direct) :" });
+    other.value = (j.urls && j.urls[LANG === "en" ? "fr" : "en"]) || j.url;
     showModal("Lien prêt", [
       el("p", { text: "Partage ce lien :" }), link,
-      el("p", { class: "warn", text: "Cette page sera supprimée automatiquement le " + j.expiresText + " (" + config.retentionDays + " jours après sa création)." }),
+      el("p", { class: "warn", text: trn("Cette page sera supprimée automatiquement le {d} ({n} jours après sa création).", { d: j.expiresText, n: config.retentionDays }) }),
+      el("p", { class: "note", text: LANG === "en" ? "Version française (lien direct) :" : "Version anglaise (lien direct) :" }), other,
       el("p", { class: "note", text: "Pense à exporter ton battle order si tu veux le garder au-delà, ou utilise « Dupliquer » depuis la page publiée." })
     ], [
       { label: "Copier le lien", onclick: function () { copy(link); } },
@@ -389,7 +396,7 @@
 
   // ---------- import / export ----------
   function exportJson() {
-    var r = BO.normalize(state, lookup);
+    var r = BO.normalize(state, lookup, LANG);
     var blob = new Blob([JSON.stringify(r.order, null, 1)], { type: "application/json" });
     var a = el("a", { href: URL.createObjectURL(blob), download: "battle-order-" + new Date().toISOString().slice(0, 10) + ".json" });
     document.body.appendChild(a); a.click(); a.remove();
@@ -403,7 +410,7 @@
       var raw;
       try { raw = JSON.parse(fr.result); } catch (e) { toast("Ce fichier n'est pas un battle order valide"); return; }
       if (!raw || !Array.isArray(raw.sections) || !raw.sections.length) { toast("Ce fichier ne contient aucune section"); return; }
-      if (!confirm("Remplacer le battle order en cours par celui du fichier ?")) return;
+      if (!confirm(trn("Remplacer le battle order en cours par celui du fichier ?"))) return;
       setState(raw);
       toast("Battle order importé");
     };
@@ -420,6 +427,7 @@
   }
 
   function init() {
+    setupLanguage();
     var probe = new Image();
     probe.onload = function () { hasLogo = true; if (state) renderPreview(); };
     probe.src = "/fnfl_flag_logo_roundel.png";
@@ -427,9 +435,24 @@
       lists.kits = listFrom(res[0], "kits"); lists.weapons = listFrom(res[1], "weapons"); lists.secondaries = listFrom(res[2], "secondaries");
       ["kits", "weapons", "secondaries"].forEach(function (k) { lookup[k] = {}; lists[k].forEach(function (x) { lookup[k][x.id] = x.nom; }); });
       return fetch("api/config").then(function (r) { return r.json(); }).then(function (c) { config = Object.assign(config, c); }).catch(function () { /* éditeur utilisable sans serveur : seule la publication échouera */ });
-    }).then(start).catch(function () {
+    }).then(start).catch(function (e) {
+      if (window.console) console.error(e);
       $("#sections").appendChild(el("p", { class: "err", text: "Impossible de charger les listes (kits, armes). Recharge la page." }));
     });
+  }
+
+  function flushSave() { try { if (state) localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* stockage indisponible : ignoré */ } }
+
+  function setupLanguage() {
+    I18N.applyStatic();
+    var T = BO.LABELS[LANG];
+    var foot = document.querySelector(".fn-foot");
+    if (foot) { foot.textContent = T.footer; foot.appendChild(el("a", { href: T.privacyHref, text: T.privacy })); }
+    Array.prototype.forEach.call(document.querySelectorAll("img[data-logo]"), function (img) { img.alt = T.logoAlt; });
+    var b = $("#btn-lang");
+    b.textContent = LANG === "fr" ? "EN" : "FR";
+    b.title = LANG === "fr" ? "Switch to English" : "Passer en français";
+    b.addEventListener("click", function () { flushSave(); I18N.setLang(LANG === "fr" ? "en" : "fr"); location.reload(); });
   }
 
   function start() {
@@ -437,16 +460,16 @@
     $("#f-subtitle").addEventListener("input", function (e) { state.subtitle = e.target.value; changed(); });
     $("#f-secondary").addEventListener("change", function (e) { state.showSecondary = e.target.checked; rebuild(); });
     $("#btn-add-cmd").addEventListener("click", function () {
-      if (state.command.length >= BO.LIMITS.maxCommand) { toast("Maximum " + BO.LIMITS.maxCommand + " lignes"); return; }
+      if (state.command.length >= BO.LIMITS.maxCommand) { toast(trn("Maximum {n} lignes", { n: BO.LIMITS.maxCommand })); return; }
       state.command.push({ label: "", name: "" }); renderCommand(); changed();
     });
     $("#btn-add-section").addEventListener("click", function () {
-      if (state.sections.length >= BO.LIMITS.maxSections) { toast("Maximum " + BO.LIMITS.maxSections + " sections"); return; }
+      if (state.sections.length >= BO.LIMITS.maxSections) { toast(trn("Maximum {n} sections", { n: BO.LIMITS.maxSections })); return; }
       var s = newSection(); state.sections.push(s); rebuild();
       var card = document.querySelector('details[data-id="' + s.id + '"]');
       if (card && card.scrollIntoView) card.scrollIntoView({ behavior: "smooth", block: "center" });
     });
-    $("#btn-new").addEventListener("click", function () { if (confirm("Effacer le battle order en cours et repartir de zéro ?")) { defaultState(); syncGeneral(); collapsed = {}; otherMode = {}; renderCommand(); renderSections(); changed(); } });
+    $("#btn-new").addEventListener("click", function () { if (confirm(trn("Effacer le battle order en cours et repartir de zéro ?"))) { defaultState(); syncGeneral(); collapsed = {}; otherMode = {}; renderCommand(); renderSections(); changed(); } });
     $("#btn-export").addEventListener("click", exportJson);
     $("#btn-import").addEventListener("click", function () { $("#file").click(); });
     $("#file").addEventListener("change", function (e) { importFile(e.target.files[0]); e.target.value = ""; });

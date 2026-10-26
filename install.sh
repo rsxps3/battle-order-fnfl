@@ -33,7 +33,7 @@ done
 echo "   Node $(node -v), nginx, et les trois listes JSON sont présents et valides"
 
 echo "== 2/8  Site (éditeur) dans $WEBROOT"
-for f in index.html style.css editor.js bo-render.js ui.js theme.css confidentialite.html; do install -m 644 "$DIR/site/$f" "$WEBROOT/$f" || fail "copie de $f"; done
+for f in index.html style.css editor.js bo-render.js ui.js i18n.js theme.css confidentialite.html privacy.html; do install -m 644 "$DIR/site/$f" "$WEBROOT/$f" || fail "copie de $f"; done
 # feuilles générées plus bas : on ne les remplace jamais si elles existent déjà
 for f in fonts.css theme-fnfl.css; do [ -f "$WEBROOT/$f" ] || install -m 644 "$DIR/site/$f" "$WEBROOT/$f"; done
 mkdir -p "$WEBROOT/o" "$WEBROOT/fonts" "$WEBROOT/assets/theme"

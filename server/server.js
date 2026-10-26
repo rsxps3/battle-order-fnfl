@@ -42,8 +42,9 @@ function lookup() {
   return { kits: loadList("kits.json", "kits"), weapons: loadList("weapons.json", "weapons"), secondaries: loadList("secondaries.json", "secondaries") };
 }
 
-// ---- dates en français (fuseau de Paris) : même fonction que l'aperçu de l'éditeur
-const dateFr = BO.dateFr;
+// ---- dates dans la langue de la page (fuseau de Paris) : même fonction que l'aperçu de l'éditeur
+const dateText = BO.dateText;
+const reqLang = req => (String(req.headers["x-lang"] || "").toLowerCase() === "en" ? "en" : "fr");   // langue des messages : celle de l'interface
 
 // ---- limitation du débit, en mémoire uniquement (aucune adresse IP n'est écrite sur le disque)
 const hits = new Map();
@@ -89,20 +90,25 @@ function readBody(req, cb) {
   req.on("error", () => { if (!done) { done = true; cb(new Error("lecture interrompue")); } });
 }
 
-function publish(order, res) {
+function publish(order, res, lang) {
   const l = lookup();
-  const r = BO.normalize(order, l);
+  const r = BO.normalize(order, l, lang);
   if (r.errors.length) return send(res, 400, { error: "invalid", details: r.errors.slice(0, 10) });
-  if (countPages() >= MAX_PAGES) return send(res, 503, { error: "full", message: "Le serveur a atteint sa limite de pages publiées. Réessaie dans quelques jours." });
+  if (countPages() >= MAX_PAGES) return send(res, 503, { error: "full", message: BO.M(lang, "Le serveur a atteint sa limite de pages publiées. Réessaie dans quelques jours.") });
   const now = Date.now();
   const expires = now + RETENTION_DAYS * 86400000;
   const id = newId();
   const meta = { id, created: now, expires };
-  const html = BO.renderPage(r.order, l, { id, createdText: dateFr(now), expiresText: dateFr(expires), retentionDays: RETENTION_DAYS, logo: fs.existsSync(path.join(ROOT, "fnfl_flag_logo_roundel.png")) });
+  // une page dans chaque langue : fr.html et en.html (le bouton FR / EN de la page y renvoie, sans aucun script) ; index.html = la langue choisie
+  const logo = fs.existsSync(path.join(ROOT, "fnfl_flag_logo_roundel.png"));
+  const pageIn = (lg) => BO.renderPage(r.order, l, { lang: lg, id, createdText: dateText(now, lg), expiresText: dateText(expires, lg), retentionDays: RETENTION_DAYS, logo, otherHref: lg === "fr" ? "en.html" : "fr.html" });
+  const pages = { fr: pageIn("fr"), en: pageIn("en") };
   const tmp = path.join(OUT, ".tmp-" + id);
   fs.mkdirSync(tmp, { mode: 0o755 });
   try {
-    fs.writeFileSync(path.join(tmp, "index.html"), html, { mode: 0o644 });
+    fs.writeFileSync(path.join(tmp, "fr.html"), pages.fr, { mode: 0o644 });
+    fs.writeFileSync(path.join(tmp, "en.html"), pages.en, { mode: 0o644 });
+    fs.writeFileSync(path.join(tmp, "index.html"), pages[lang], { mode: 0o644 });
     fs.writeFileSync(path.join(tmp, "data.json"), JSON.stringify(r.order), { mode: 0o644 });
     fs.writeFileSync(path.join(tmp, "meta.json"), JSON.stringify(meta), { mode: 0o644 });
     fs.renameSync(tmp, path.join(OUT, id));
@@ -111,7 +117,8 @@ function publish(order, res) {
     throw e;
   }
   console.log("publié : " + id + " (" + r.order.sections.length + " sections)");
-  return send(res, 200, { id, url: BASE_URL + "/o/" + id + "/", created: now, expires, expiresText: dateFr(expires) });
+  const base = BASE_URL + "/o/" + id + "/";
+  return send(res, 200, { id, url: base, urls: { fr: base + "fr.html", en: base + "en.html" }, lang, created: now, expires, expiresText: dateText(expires, lang) });
 }
 
 const server = http.createServer((req, res) => {
@@ -121,15 +128,17 @@ const server = http.createServer((req, res) => {
     if (req.method === "GET" && url === "/api/config") return send(res, 200, { codeRequired: !!CODE, retentionDays: RETENTION_DAYS });
     if (req.method === "POST" && url === "/api/publish") {
       const ip = String(req.headers["x-real-ip"] || req.socket.remoteAddress || "?");
-      if (limited(ip)) return send(res, 429, { error: "rate", message: "Trop de publications récentes : réessaie un peu plus tard." });
+      const hl = reqLang(req);
+      if (limited(ip)) return send(res, 429, { error: "rate", message: BO.M(hl, "Trop de publications récentes : réessaie un peu plus tard.") });
       if (!/^application\/json/i.test(req.headers["content-type"] || "")) return send(res, 415, { error: "type" });
       return readBody(req, (err, text) => {
-        if (err) { res.setHeader("Connection", "close"); return send(res, 413, { error: "size", message: "Battle order trop volumineux." }); }
+        if (err) { res.setHeader("Connection", "close"); return send(res, 413, { error: "size", message: BO.M(hl, "Battle order trop volumineux.") }); }
         let body;
         try { body = JSON.parse(text); } catch (e) { return send(res, 400, { error: "json" }); }
         if (!body || typeof body !== "object") return send(res, 400, { error: "json" });
-        if (CODE && !(typeof body.code === "string" && sameCode(body.code))) return send(res, 403, { error: "code", message: "Code de publication incorrect." });
-        try { publish(body.order, res); } catch (e) { console.error("erreur de publication :", e.message); send(res, 500, { error: "server" }); }
+        if (CODE && !(typeof body.code === "string" && sameCode(body.code))) return send(res, 403, { error: "code", message: BO.M(hl, "Code de publication incorrect.") });
+        const lang = body.lang === "en" || body.lang === "fr" ? body.lang : hl;     // langue de la page publiée par défaut
+        try { publish(body.order, res, lang); } catch (e) { console.error("erreur de publication :", e.message); send(res, 500, { error: "server" }); }
       });
     }
     return send(res, 404, { error: "not found" });

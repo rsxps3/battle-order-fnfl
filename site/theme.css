@@ -36,3 +36,5 @@ body{
 .legal th{background:rgba(255,255,255,.08)}
 .legal code{background:rgba(255,255,255,.1);padding:1px 5px;border-radius:4px}
 @media (max-width:640px){.legal{margin:10px;padding:16px}.legal table{font-size:.78rem}}
+.fn-head .fn-lang{margin-left:14px;font-size:.8rem;padding:3px 10px;border:1px solid currentColor;border-radius:4px;opacity:.85;letter-spacing:.05em}
+.fn-head .fn-lang:hover{opacity:1}

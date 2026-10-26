@@ -20,11 +20,24 @@ nginx et les fichiers générés.
 
 | Dossier | Rôle |
 |---|---|
-| `site/` | éditeur (`index.html`, `style.css`, `editor.js`), rendu partagé (`bo-render.js`), charte graphique (`theme.css`, `fonts.css`, `theme-fnfl.css`), page `confidentialite.html`, `ui.js` |
+| `site/` | éditeur (`index.html`, `style.css`, `editor.js`), traduction de l'éditeur (`i18n.js`), rendu partagé FR/EN (`bo-render.js`), charte graphique (`theme.css`, `fonts.css`, `theme-fnfl.css`), pages `confidentialite.html` et `privacy.html`, `ui.js` |
 | `server/` | service de publication (`server.js`) et purge à 30 jours (`purge.js`), sans aucune dépendance |
 | `systemd/` | service, service de purge et minuteur quotidien (4 h 20) |
 | `nginx/` | configuration du site et zone de limitation de débit |
 | `tools/` | `extract-theme.py` (reprend l'arrière-plan de fnfl.app), `git-save.sh` (enregistre et envoie sur GitHub) |
+
+## Français / anglais
+
+Bouton **FR / EN** en haut de l'éditeur (la langue du navigateur est utilisée au départ, puis le choix est mémorisé ; le brouillon est
+conservé quand on change de langue). Tout l'éditeur, ses messages, l'aperçu et la page de confidentialité (`confidentialite.html` en français,
+`privacy.html` en anglais) sont traduits.
+
+Chaque page publiée existe **dans les deux langues** : `/o/<id>/fr.html` et `/o/<id>/en.html`, qui se renvoient l'une à l'autre par un bouton FR / EN
+(un simple lien, sans script : la politique de sécurité des pages publiées n'en autorise aucun). `/o/<id>/` (donc le lien partagé) ouvre la langue
+dans laquelle l'éditeur était réglé à la génération ; l'éditeur affiche aussi le lien direct de l'autre version. Les dates, le bandeau de suppression,
+« joueurs / players », « Véhicules / Vehicles », etc. suivent la langue de la page. Les noms de kits et d'armes viennent de vos fichiers JSON : ils ne sont pas
+traduits (« Autre » et « Other » y sont tous deux reconnus comme l'entrée à texte libre ; « Autre » est affiché « Other » dans l'interface anglaise).
+Les pages déjà publiées avant cette mise à jour restent en français seules.
 
 ## Charte graphique
 
