@@ -66,7 +66,7 @@
       expiry: "Attention : cette page sera supprimée automatiquement le <strong>{d}</strong> ({n} jours après sa création).",
       created: "Créée le {d}. ", duplicate: "Dupliquer ce battle order dans l\u2019éditeur",
       logoAlt: "Logo Forces Navales Françaises Libres", otherLang: "EN", otherLangTitle: "Read this page in English",
-      footer: "3ème Régiment de Fusiliers Marins \u00b7 Forces Navales Françaises Libres \u00b7 « Vaincre ou sombrer » \u00b7 \u00a9 Copyright \u00b7 Made by Remzer \u00b7 ",
+      footer: "Forces Navales Françaises Libres \u00b7 3ème Régiment de Fusiliers Marins \u00b7 « Vaincre ou sombrer » \u00b7 \u00a9 Copyright \u00b7 Made by Remzer \u00b7 ",
       privacy: "Confidentialité", privacyHref: "/confidentialite.html"
     },
     en: {
@@ -344,13 +344,13 @@
     return h.join("");
   }
 
-  var THEME_LINKS = '<link rel="stylesheet" href="/fonts.css"><link rel="stylesheet" href="/theme.css"><link rel="stylesheet" href="/theme-fnfl.css">';
+  var THEME_LINKS = '<link rel="icon" type="image/png" sizes="32x32" href="/favicon-bo-32.png"><link rel="icon" type="image/png" sizes="512x512" href="/favicon-bo.png"><link rel="apple-touch-icon" href="/apple-touch-icon-bo.png"><link rel="stylesheet" href="/fonts.css"><link rel="stylesheet" href="/theme.css"><link rel="stylesheet" href="/theme-fnfl.css">';
   // otherHref : lien relatif vers la même page dans l'autre langue (rien si absent : aperçu de l'éditeur)
   function headerHtml(logo, lang, otherHref) {
     var T = L(lang), other = lang === "en" ? "fr" : "en";
     return '<header class="fn-head"><a href="https://fnfl.app/" target="_blank" rel="noopener noreferrer">' +
       (logo ? '<img src="/fnfl_flag_logo_roundel.png" width="44" height="44" alt="' + esc(T.logoAlt) + '"> ' : "") +
-      '<span>3e RFM \u00b7 FNFL</span></a><span class="fn-sep">Battle order</span>' +
+      '<span>FNFL \u00b7 3e RFM</span></a><span class="fn-sep">Battle order</span>' +
       (otherHref ? '<a class="fn-lang" href="' + esc(otherHref) + '" hreflang="' + other + '" lang="' + other + '" title="' + esc(T.otherLangTitle) + '">' + T.otherLang + "</a>" : "") + "</header>";
   }
   function footerHtml(lang) {
